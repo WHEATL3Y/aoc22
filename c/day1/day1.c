@@ -6,16 +6,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define END -1
-#define MAXELVES 10000
-#define BUFSIZE 10
+#define MAXELVES 1000
+
+int cmp(const void *, const void *);
+
+int cmp(const void *a, const void *b) {
+
+    return *(int*)a < *(int*)b ? 1 : -1;
+
+}
 
 int main(void) {
 
     FILE *f = fopen("input.txt", "r");
     char *buffer;
     size_t length;
-    int max = 0;
     int elfNumber = 0;
     int elfInventory;
     int elves[MAXELVES];
@@ -33,17 +38,11 @@ int main(void) {
         }
     }
 
-    while (elfNumber-- >= 0) {
-        
-        if (elves[elfNumber] > max) {
-            max = elves[elfNumber];
-        }
-
-    }
-
-    printf("%d\n", max);
-
     free(buffer);
+    qsort(elves, elfNumber, sizeof(int), cmp);
+
+    printf("%d\n", elves[0]);
+    printf("%d\n", elves[0] + elves[1] + elves[2]);
 
     return EXIT_SUCCESS;
 
