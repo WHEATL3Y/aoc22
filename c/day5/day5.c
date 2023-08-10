@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct Stack {
     int size;
@@ -36,6 +37,16 @@ void move(int n, Stack *from, Stack *to) {
 
 }
 
+void moveall(int n, Stack *from, Stack *to) {
+
+    int nCopy = n;
+    for (; n > 0; n--) {
+        to->values[to->size + (n)] = from->values[from->size];
+        from->size--;
+    }
+    to->size += nCopy;
+}
+
 int main(void) {
    
     FILE *f = fopen("input.txt", "r");
@@ -51,6 +62,7 @@ int main(void) {
     int to;
 
     Stack stacks[10] = {0};
+    Stack stacks1[10] = {0};
 
     // Read in stacks
     while ((c = getc(f))) {
@@ -89,6 +101,8 @@ int main(void) {
         reverse(&stacks[col]);
     }
 
+    memcpy(stacks1, stacks, sizeof(stacks));
+
     /* for (int i = 0; i <= numCols; i++) { */
     /*     printf("%d: ", stacks[i].size); */
     /*     for (int j = 0; j <= stacks[i].size; j++) { */
@@ -126,6 +140,7 @@ int main(void) {
         else if (c == '\n') {
             p = 0;
             move(n, &stacks[from - 1], &stacks[to - 1]); 
+            moveall(n, &stacks1[from - 1], &stacks1[to - 1]);
         }
         else if (c != EOF){
             continue;
@@ -138,8 +153,13 @@ int main(void) {
     for (col = 0; col <= numCols; col++) {
         printf("%c", stacks[col].values[stacks[col].size]);
     } 
-
     printf("\n");
+
+    for (col = 0; col <= numCols; col++) {
+        printf("%c", stacks1[col].values[stacks1[col].size]);
+    } 
+    printf("\n");
+
     // TEMPORARY Testing
     /* for (int i = 0; i <= numCols; i++) { */
     /*     printf("%d: ", stacks[i].size); */
