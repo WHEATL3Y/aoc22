@@ -5,18 +5,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
-#define MAX_TOKEN   255
-#define MAX_NAME    255
-#define MAX_DIR     100
+#define MAX_TOKEN       255
+#define MAX_NAME        255
+#define MAX_DIR         100
+#define FS_SIZE         70000000
+#define SPACE_NEEDED    30000000
 
-#define CMD         255
-#define CHANGE      256
-#define LIST        257
-#define DIR         258
-#define F_SIZE      259
-#define DIR_NAME    260
-#define F_NAME      261
+#define CMD             255
+#define CHANGE          256
+#define LIST            257
+#define DIR             258
+#define F_SIZE          259
+#define DIR_NAME        260
+#define F_NAME          261
 
 typedef struct file {
     unsigned size;
@@ -38,15 +41,16 @@ int mkdir(char *, dir *, dir *);
 int mkfile(char *, unsigned, dir *, file *);
 int cd(char *);
 int ls(void);
-int getDirSize(dir *);
+size_t getDirSize(dir *);
 
 static char token[MAX_TOKEN];
 static dir *pwd;
 static dir *root;
 static int mode;
-static int a1Pointer = 0;
-
-dir *a1Dirs[MAX_DIR];
+static size_t used = -1;
+static size_t freeSpace = -1;
+static size_t answer1 = 0;
+static size_t answer2 = 0;
 
 int getToken(FILE *f) {
 
@@ -157,29 +161,32 @@ int ls(void) {
 
 }
 
-int getDirSize(dir *directory) {
+size_t getDirSize(dir *directory) {
 
     int i;
-    int size = 0;
+    size_t size = 0;
+    size_t thisSize = 0;
 
     for (i = 0; i < directory->numDirs; i++) {
-       size += getDirSize(directory->children[i]); 
-       if (size <= 100000) {
-            a1Dirs[a1Pointer++] = directory->children[i];        
-       }
+        size = getDirSize(directory->children[i]); 
+        thisSize += size;
+        
+        if (size <= 100000) {
+            answer1 += size;
+        }
+        if (answer2 && freeSpace + size >= SPACE_NEEDED && size < answer2) {
+            answer2 = size;
+        } 
     }
 
     for (i = 0; i < directory->numFiles; i++) {
-       size += directory->files[i]->size; 
+        thisSize += directory->files[i]->size; 
     }
 
-    return size; 
+    return thisSize; 
 }
 
 int main(void) {
-
-    int answer1;
-    int answer2;
 
     FILE *f = fopen("input.txt", "r");
 
@@ -226,11 +233,14 @@ int main(void) {
             } 
         }
     }
-  
-    // Answer Part 1
+ 
+    // Answers
+    answer2 = getDirSize(root); 
+    freeSpace = FS_SIZE - answer2;
+    printf("%zu\n", answer1);
+    getDirSize(root);
+    printf("%zu\n", answer2); 
 
-
-    
     // Interactive Pseudo-shell
     printf("--------------------\n");
     while (1) {
@@ -251,6 +261,9 @@ int main(void) {
         }
         else if (!strcmp(token, "exit")) {
             return EXIT_SUCCESS;
+        }
+        else if (!strcmp(token, "size")) {
+            printf("%s: %zu\n", pwd->name, getDirSize(pwd));
         }
         else {
             printf("Invalid Command: %s\n", token);
